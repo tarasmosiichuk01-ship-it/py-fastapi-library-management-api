@@ -30,12 +30,12 @@ def get_author_by_id(db: Session, author_id: int):
     return db.scalar(select(models.DBAuthor).where(models.DBAuthor.id == author_id))
 
 
-def create_book(db: Session, book: schemas.BookCreate):
+def create_book(author_id: int, db: Session, book: schemas.BookCreate):
     db_book = models.DBBook(
         title=book.title,
         summary=book.summary,
         publication_date=book.publication_date,
-        author_id=book.author_id
+        author_id=author_id
     )
     db.add(db_book)
     db.commit()
