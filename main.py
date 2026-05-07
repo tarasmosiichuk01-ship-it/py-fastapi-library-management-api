@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-import models
 import crud
 import schemas
 from database import SessionLocal, Base, engine
@@ -32,8 +31,10 @@ def create_author(
     return crud.create_author(db=db, author=author)
 
 
-
-@app.get("/authors/", response_model=list[schemas.Author])
+@app.get(
+    "/authors/",
+    response_model=list[schemas.Author]
+)
 def read_authors(
     db: Session = Depends(get_db),
     skip: int = Query(default=0, ge=0),
@@ -42,8 +43,10 @@ def read_authors(
     return crud.get_all_authors(db=db, skip=skip, limit=limit)
 
 
-
-@app.get("/authors/{author_id}/", response_model=schemas.Author)
+@app.get(
+    "/authors/{author_id}/",
+    response_model=schemas.Author
+)
 def read_single_author(author_id: int, db: Session = Depends(get_db)):
     db_author = crud.get_author_by_id(db=db, author_id=author_id)
 
@@ -54,7 +57,11 @@ def read_single_author(author_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/authors/{author_id}/books", response_model=schemas.Book)
-def create_book(author_id: int, book: schemas.BookCreate, db: Session = Depends(get_db)):
+def create_book(
+    author_id: int,
+    book: schemas.BookCreate,
+    db: Session = Depends(get_db)
+):
     db_author = crud.get_author_by_id(db=db, author_id=author_id)
     if not db_author:
         raise HTTPException(status_code=404, detail="Author doesn't exist")
@@ -63,18 +70,16 @@ def create_book(author_id: int, book: schemas.BookCreate, db: Session = Depends(
 
 @app.get("/books/", response_model=list[schemas.Book])
 def read_books(
+    author_id: int | None = None,
     db: Session = Depends(get_db),
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=10, le=100)
 ):
-    return crud.get_all_books(db=db, skip=skip, limit=limit)
-
-
-@app.get("/books/?author_id=X", response_model=list[schemas.Book])
-def read_books_filtered_by_author_id(author_id: int, db: Session = Depends(get_db)):
-    db_books = crud.get_book_filter_by_author_id(db=db, author_id=author_id)
-
-    if db_books is None:
-        raise HTTPException(status_code=404, detail="Book not found")
+    db_books = crud.get_all_books(
+        db=db,
+        author_id=author_id,
+        skip=skip,
+        limit=limit
+    )
 
     return db_books

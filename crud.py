@@ -6,7 +6,8 @@ import schemas
 
 
 def get_all_authors(db: Session, skip: int = 0, limit: int = 10):
-    return db.scalars(select(models.DBAuthor)).all()
+    authors = select(models.DBAuthor).offset(skip).limit(limit)
+    return db.scalars(authors).all()
 
 
 def get_author_by_name(db: Session, name: str):
@@ -27,7 +28,11 @@ def create_author(db: Session, author: schemas.AuthorCreate):
 
 
 def get_author_by_id(db: Session, author_id: int):
-    return db.scalar(select(models.DBAuthor).where(models.DBAuthor.id == author_id))
+    return db.scalar(
+        select(models.DBAuthor).where(
+            models.DBAuthor.id == author_id
+        )
+    )
 
 
 def create_book(author_id: int, db: Session, book: schemas.BookCreate):
@@ -44,14 +49,17 @@ def create_book(author_id: int, db: Session, book: schemas.BookCreate):
     return db_book
 
 
-def get_all_books(db: Session, skip: int = 0, limit: int = 10):
-    return db.scalars(select(models.DBBook)).all()
-
-
-def get_book_filter_by_author_id(db: Session, author_id: int):
-    queryset = select(models.DBBook)
+def get_all_books(
+    author_id: int | None,
+    db: Session,
+    skip: int = 0,
+    limit: int = 10
+):
+    books = select(models.DBBook)
 
     if author_id:
-        queryset = queryset.join(models.DBAuthor).where(models.DBAuthor.id == author_id)
+        books = books.where(models.DBBook.author_id == author_id)
 
-    return db.scalars(queryset).all()
+    books = books.offset(skip).limit(limit)
+
+    return db.scalars(books).all()
